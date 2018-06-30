@@ -12,22 +12,22 @@
 -define(LIB_NAME, bitvector).
 
 vector_new(_) ->
-    exit({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
+    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
 
 vector_get(_, _) ->
-    exit({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
+    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
 
 vector_set(_, _, _) ->
-    exit({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
+    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
 
 ringbuffer_new(_) ->
-    exit({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
+    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
 
 ringbuffer_append(_, _) ->
-    exit({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
+    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
 
 ringbuffer_popcnt(_) ->
-    exit({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
+    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
 
 init() ->
     SoName = case code:priv_dir(?LIB_NAME) of

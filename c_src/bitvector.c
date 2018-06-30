@@ -20,7 +20,7 @@ static ERL_NIF_TERM erl_bitvector_new(ErlNifEnv* env, int argc, const ERL_NIF_TE
 
     // Extract the int value for the vector size (in bits)
     uint64_t size;
-    if(!enif_get_uint64(env, argv[0], &size)) {
+    if(!enif_get_uint64(env, argv[0], &size) || !size) {
         return mk_error(env, "bad_size");
     }
 
@@ -51,7 +51,7 @@ static ERL_NIF_TERM erl_bitvector_new(ErlNifEnv* env, int argc, const ERL_NIF_TE
     // Return
     ERL_NIF_TERM ret = enif_make_resource(env, state);
     enif_release_resource(state);
-    return ret;
+    return enif_make_tuple2(env, mk_atom(env, "ok"), ret);
 }
 
 static ERL_NIF_TERM erl_bitvector_set(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
@@ -127,7 +127,8 @@ static ERL_NIF_TERM erl_bitvector_get(ErlNifEnv* env, int argc, const ERL_NIF_TE
     const uint8_t word_index = bit_index % 64;
     uint8_t value = vector->bit_data[word_offset] & (1 << word_index) ? 1 : 0;
 
-    return enif_make_uint64(env, value);
+    ERL_NIF_TERM ret = enif_make_uint64(env, value);
+    return enif_make_tuple2(env, mk_atom(env, "ok"), ret);
 }
 
 static ERL_NIF_TERM erl_ringbuffer_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
@@ -138,7 +139,7 @@ static ERL_NIF_TERM erl_ringbuffer_new(ErlNifEnv* env, int argc, const ERL_NIF_T
 
     // Extract the int value for the vector size (in bits)
     uint64_t size;
-    if(!enif_get_uint64(env, argv[0], &size)) {
+    if(!enif_get_uint64(env, argv[0], &size) || !size) {
         return mk_error(env, "bad_size");
     }
 
@@ -171,7 +172,7 @@ static ERL_NIF_TERM erl_ringbuffer_new(ErlNifEnv* env, int argc, const ERL_NIF_T
     // Return
     ERL_NIF_TERM ret = enif_make_resource(env, state);
     enif_release_resource(state);
-    return ret;
+    return enif_make_tuple2(env, mk_atom(env, "ok"), ret);
 }
 
 static ERL_NIF_TERM erl_ringbuffer_append(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
@@ -238,7 +239,7 @@ static ERL_NIF_TERM erl_ringbuffer_popcnt(ErlNifEnv* env, int argc, const ERL_NI
     uint64_t popcnt = popcnt_vector(buffer->bit_data, buffer->vector_size);
 
     // Return
-    return enif_make_uint64(env, popcnt);
+    return enif_make_tuple2(env, mk_atom(env, "ok"), enif_make_uint64(env, popcnt));
 }
 
 static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits) {
