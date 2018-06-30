@@ -88,10 +88,11 @@ static ERL_NIF_TERM erl_bitvector_set(ErlNifEnv* env, int argc, const ERL_NIF_TE
     // Set/clear the bit
     const uint64_t word_offset = bit_index / 64;
     const uint8_t word_index = bit_index % 64;
+    uint64_t test_bit = ((uint64_t) 1) << word_index;
     if (bit) {
-        vector->bit_data[word_offset] |= (1 << word_index);
+        vector->bit_data[word_offset] |= test_bit;
     } else {
-        vector->bit_data[word_offset] &= ~(1 << word_index);
+        vector->bit_data[word_offset] &= ~test_bit;
     }
 
     return mk_atom(env, "ok");
@@ -197,10 +198,11 @@ static ERL_NIF_TERM erl_ringbuffer_append(ErlNifEnv* env, int argc, const ERL_NI
     }
 
     // Set/clear the bit
+    uint64_t test_bit = ((uint64_t) 1) << buffer->word_index;
     if (bit) {
-        buffer->bit_data[buffer->word_offset] |= (1 << buffer->word_index);
+        buffer->bit_data[buffer->word_offset] |= test_bit;
     } else {
-        buffer->bit_data[buffer->word_offset] &= ~(1 << buffer->word_index);
+        buffer->bit_data[buffer->word_offset] &= ~test_bit;
     }
 
     // Increment the index on the buffer
@@ -246,7 +248,7 @@ static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits) {
     uint64_t vector_size_words = (vector_size_bits / 64) + (vector_size_bits % 64 == 0 ? 0 : 1);
     uint64_t popcnt = 0;
     for (uint64_t i = 0; i < vector_size_words; i++) {
-        popcnt += __builtin_popcount(vector[i]);
+        popcnt += __builtin_popcountll(vector[i]);
     }
     return popcnt;
 }
