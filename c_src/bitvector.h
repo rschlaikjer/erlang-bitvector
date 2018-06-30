@@ -66,9 +66,15 @@ static ERL_NIF_TERM erl_ringbuffer_popcnt(
 
 // Internal
 static inline uint64_t words_for_bits(uint64_t bit_count);
-static inline void set_bit(uint64_t* vector, const uint64_t bit_index, const unsigned int bit);
-static inline void set_bit_offset_index(uint64_t* vector, const uint64_t word_offset, const uint8_t word_index, const unsigned int bit);
-static uint64_t* allocate_bit_vector(const struct PrivData *priv_data, uint64_t size_bits);
+static inline void set_bit(uint64_t* vector,
+                           const uint64_t bit_index,
+                           const unsigned int bit);
+static inline void set_bit_offset_index(uint64_t* vector,
+                                        const uint64_t word_offset,
+                                        const uint8_t word_index,
+                                        const unsigned int bit);
+static uint64_t* allocate_bit_vector(const struct PrivData *priv_data,
+                                     uint64_t size_bits);
 static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits);
 
 // Data destructors
@@ -81,7 +87,8 @@ ERL_NIF_TERM mk_error(ErlNifEnv* env, const char* mesg);
 
 // Module callbacks
 int load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info);
-int upgrade(ErlNifEnv* env, void** priv_data, void** old_priv_data, ERL_NIF_TERM load_info);
+int upgrade(ErlNifEnv* env, void** priv_data,
+            void** old_priv_data, ERL_NIF_TERM load_info);
 void unload(ErlNifEnv* env, void* priv_data);
 
 // Export methods

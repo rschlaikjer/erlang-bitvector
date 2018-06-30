@@ -13,16 +13,21 @@ ERL_NIF_TERM mk_error(ErlNifEnv* env, const char* mesg) {
 }
 
 static inline uint64_t words_for_bits(uint64_t bit_count) {
-    return (bit_count / WORD_SIZE_BITS) + (bit_count % WORD_SIZE_BITS > 0 ? 1 : 0);
+    return (bit_count / WORD_SIZE_BITS) +
+        (bit_count % WORD_SIZE_BITS > 0 ? 1 : 0);
 }
 
-static inline void set_bit(uint64_t* vector, const uint64_t bit_index, const unsigned int bit) {
+static inline void set_bit(uint64_t* vector, const uint64_t bit_index,
+                           const unsigned int bit) {
     const uint64_t word_offset = bit_index / WORD_SIZE_BITS;
     const uint8_t word_index = bit_index % WORD_SIZE_BITS;
     set_bit_offset_index(vector, word_offset, word_index, bit);
 }
 
-static inline void set_bit_offset_index(uint64_t* vector, const uint64_t word_offset, const uint8_t word_index, const unsigned int bit) {
+static inline void set_bit_offset_index(uint64_t* vector,
+                                        const uint64_t word_offset,
+                                        const uint8_t word_index,
+                                        const unsigned int bit) {
     uint64_t test_bit = ((uint64_t) 1) << word_index;
     if (bit) {
         vector[word_offset] |= test_bit;
@@ -31,7 +36,8 @@ static inline void set_bit_offset_index(uint64_t* vector, const uint64_t word_of
     }
 }
 
-static uint64_t* allocate_bit_vector(const struct PrivData *priv_data, uint64_t size_bits) {
+static uint64_t* allocate_bit_vector(const struct PrivData *priv_data,
+                                     uint64_t size_bits) {
     // Allocate data from ERTS
     const size_t byte_size = words_for_bits(size_bits) * WORD_SIZE_BYTES;
     uint64_t *bit_data = enif_alloc_resource(
@@ -45,7 +51,8 @@ static uint64_t* allocate_bit_vector(const struct PrivData *priv_data, uint64_t 
     return bit_data;
 }
 
-static ERL_NIF_TERM erl_bitvector_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM erl_bitvector_new(ErlNifEnv* env, int argc,
+                                      const ERL_NIF_TERM argv[]) {
     // Assert we got one arg
     if(argc != 1) {
         return enif_make_badarg(env);
@@ -75,7 +82,8 @@ static ERL_NIF_TERM erl_bitvector_new(ErlNifEnv* env, int argc, const ERL_NIF_TE
     return enif_make_tuple2(env, mk_atom(env, "ok"), ret);
 }
 
-static ERL_NIF_TERM erl_bitvector_set(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM erl_bitvector_set(ErlNifEnv* env, int argc,
+                                      const ERL_NIF_TERM argv[]) {
     if (argc != 3) {
         return enif_make_badarg(env);
     }
@@ -112,7 +120,8 @@ static ERL_NIF_TERM erl_bitvector_set(ErlNifEnv* env, int argc, const ERL_NIF_TE
     return mk_atom(env, "ok");
 }
 
-static ERL_NIF_TERM erl_bitvector_get(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM erl_bitvector_get(ErlNifEnv* env, int argc,
+                                      const ERL_NIF_TERM argv[]) {
     if (argc != 2) {
         return enif_make_badarg(env);
     }
@@ -140,13 +149,16 @@ static ERL_NIF_TERM erl_bitvector_get(ErlNifEnv* env, int argc, const ERL_NIF_TE
     // Get the bit value
     const uint64_t word_offset = bit_index / WORD_SIZE_BITS;
     const uint8_t word_index = bit_index % WORD_SIZE_BITS;
-    const uint8_t value = vector->bit_data[word_offset] & (1 << word_index) ? 1 : 0;
+    const uint8_t value = (
+        vector->bit_data[word_offset] & (1 << word_index) ? 1 : 0
+    );
 
     ERL_NIF_TERM ret = enif_make_uint(env, value);
     return enif_make_tuple2(env, mk_atom(env, "ok"), ret);
 }
 
-static ERL_NIF_TERM erl_ringbuffer_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM erl_ringbuffer_new(ErlNifEnv* env, int argc,
+                                       const ERL_NIF_TERM argv[]) {
     // Assert we got one arg
     if(argc != 1) {
         return enif_make_badarg(env);
@@ -178,7 +190,8 @@ static ERL_NIF_TERM erl_ringbuffer_new(ErlNifEnv* env, int argc, const ERL_NIF_T
     return enif_make_tuple2(env, mk_atom(env, "ok"), ret);
 }
 
-static ERL_NIF_TERM erl_ringbuffer_append(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM erl_ringbuffer_append(ErlNifEnv* env, int argc,
+                                          const ERL_NIF_TERM argv[]) {
     // Assert we got 2 args, buffer + new value
     if(argc != 2) {
         return enif_make_badarg(env);
@@ -215,7 +228,10 @@ static ERL_NIF_TERM erl_ringbuffer_append(ErlNifEnv* env, int argc, const ERL_NI
     }
 
     // Wrap it if we ended up past the end of the buffer
-    if (buffer->word_offset * WORD_SIZE_BITS + buffer->word_index >= buffer->vector_size) {
+    const uint64_t current_bit = (
+        buffer->word_offset * WORD_SIZE_BITS + buffer->word_index
+    );
+    if (current_bit >= buffer->vector_size) {
         buffer->word_offset = 0;
         buffer->word_index = 0;
     }
@@ -224,7 +240,8 @@ static ERL_NIF_TERM erl_ringbuffer_append(ErlNifEnv* env, int argc, const ERL_NI
     return mk_atom(env, "ok");
 }
 
-static ERL_NIF_TERM erl_ringbuffer_popcnt(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+static ERL_NIF_TERM erl_ringbuffer_popcnt(ErlNifEnv* env, int argc,
+                                          const ERL_NIF_TERM argv[]) {
     // Assert we got one arg
     if(argc != 1) {
         return enif_make_badarg(env);
@@ -240,10 +257,16 @@ static ERL_NIF_TERM erl_ringbuffer_popcnt(ErlNifEnv* env, int argc, const ERL_NI
     }
 
     // Popcnt the data
-    const uint64_t popcnt = popcnt_vector(buffer->bit_data, buffer->vector_size);
+    const uint64_t popcnt = popcnt_vector(
+        buffer->bit_data, buffer->vector_size
+    );
 
-    // Return
-    return enif_make_tuple2(env, mk_atom(env, "ok"), enif_make_uint64(env, popcnt));
+    // Return {ok, PopCnt}
+    return enif_make_tuple2(
+        env,
+        mk_atom(env, "ok"),
+        enif_make_uint64(env, popcnt)
+    );
 }
 
 static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits) {
@@ -294,7 +317,9 @@ int load(ErlNifEnv* env, void** priv_data, UNUSED ERL_NIF_TERM load_info) {
         &tried
     );
 
-    if (!bit_data_resource || !bit_vector_resource || !bit_ringbuffer_resource) {
+    if (!bit_data_resource
+            || !bit_vector_resource
+            || !bit_ringbuffer_resource) {
         return 1;
     }
 
