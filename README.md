@@ -6,7 +6,7 @@ Native C implementation of bit vectors, and bit ringbuffers.
 Add as a dependency:
 
 ```erlang
-{bitvector, "0.1.0", {git, "https://github.com/rschlaikjer/erlang-bitvector.git", {tag, "0.1.0"}}}
+{bitvector, "0.2.0", {git, "https://github.com/rschlaikjer/erlang-bitvector.git", {tag, "0.2.0"}}}
 ```
 
 Bit vectors simply store packed bit values:
