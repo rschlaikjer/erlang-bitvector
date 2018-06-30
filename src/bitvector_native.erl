@@ -1,4 +1,4 @@
--module(bitvector).
+-module(bitvector_native).
 -export([
     vector_new/1,
     vector_get/2,

@@ -81,6 +81,6 @@ static ErlNifFunc nif_funcs[] = {
     {"ringbuffer_append", 2, erl_ringbuffer_append, 0},
     {"ringbuffer_popcnt", 1, erl_ringbuffer_popcnt, 0}
 };
-ERL_NIF_INIT(bitvector, nif_funcs, load, NULL, upgrade, unload);
+ERL_NIF_INIT(bitvector_native, nif_funcs, load, NULL, upgrade, unload);
 
 #endif // BITVECTOR_H
