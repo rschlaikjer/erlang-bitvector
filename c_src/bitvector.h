@@ -63,6 +63,10 @@ static ERL_NIF_TERM erl_ringbuffer_popcnt(
 // Internal
 static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits);
 
+// Data destructors
+void destructor_bit_vector(ErlNifEnv* env, void* obj);
+void destructor_bit_ringbuffer(ErlNifEnv* env, void* obj);
+
 // Internal term manipulation
 ERL_NIF_TERM mk_atom(ErlNifEnv* env, const char* atom);
 ERL_NIF_TERM mk_error(ErlNifEnv* env, const char* mesg);

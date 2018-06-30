@@ -250,6 +250,16 @@ static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits) {
     return popcnt;
 }
 
+void destructor_bit_vector(ErlNifEnv* env, void* obj) {
+    struct bit_vector *vector = obj;
+    enif_release_resource(vector->bit_data);
+}
+
+void destructor_bit_ringbuffer(ErlNifEnv* env, void* obj) {
+    struct bit_ringbuffer *buffer = obj;
+    enif_release_resource(buffer->bit_data);
+}
+
 // Module callbacks
 int load(ErlNifEnv* env, void** priv_data, UNUSED ERL_NIF_TERM load_info) {
     // Create our desired resource types
@@ -266,7 +276,7 @@ int load(ErlNifEnv* env, void** priv_data, UNUSED ERL_NIF_TERM load_info) {
         env,
         NULL, // module_str (unused, must be NULL)
         "bit_vector_state",
-        NULL, // No destructor
+        destructor_bit_vector,
         ERL_NIF_RT_CREATE,
         &tried
     );
@@ -274,7 +284,7 @@ int load(ErlNifEnv* env, void** priv_data, UNUSED ERL_NIF_TERM load_info) {
         env,
         NULL, // module_str (unused, must be NULL)
         "bit_ringbuffer_state",
-        NULL, // No destructor
+        destructor_bit_ringbuffer,
         ERL_NIF_RT_CREATE,
         &tried
     );
