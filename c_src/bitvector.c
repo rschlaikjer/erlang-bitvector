@@ -12,6 +12,39 @@ ERL_NIF_TERM mk_error(ErlNifEnv* env, const char* mesg) {
     return enif_make_tuple2(env, mk_atom(env, "error"), mk_atom(env, mesg));
 }
 
+static inline uint64_t words_for_bits(uint64_t bit_count) {
+    return (bit_count / WORD_SIZE_BITS) + (bit_count % WORD_SIZE_BITS > 0 ? 1 : 0);
+}
+
+static inline void set_bit(uint64_t* vector, const uint64_t bit_index, const unsigned int bit) {
+    const uint64_t word_offset = bit_index / WORD_SIZE_BITS;
+    const uint8_t word_index = bit_index % WORD_SIZE_BITS;
+    set_bit_offset_index(vector, word_offset, word_index, bit);
+}
+
+static inline void set_bit_offset_index(uint64_t* vector, const uint64_t word_offset, const uint8_t word_index, const unsigned int bit) {
+    uint64_t test_bit = ((uint64_t) 1) << word_index;
+    if (bit) {
+        vector[word_offset] |= test_bit;
+    } else {
+        vector[word_offset] &= ~test_bit;
+    }
+}
+
+static uint64_t* allocate_bit_vector(const struct PrivData *priv_data, uint64_t size_bits) {
+    // Allocate data from ERTS
+    const size_t byte_size = words_for_bits(size_bits) * WORD_SIZE_BYTES;
+    uint64_t *bit_data = enif_alloc_resource(
+        priv_data->bit_data_resource,
+        byte_size
+    );
+
+    // Initialize to zero
+    memset(bit_data, 0, byte_size);
+
+    return bit_data;
+}
+
 static ERL_NIF_TERM erl_bitvector_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
     // Assert we got one arg
     if(argc != 1) {
@@ -24,21 +57,9 @@ static ERL_NIF_TERM erl_bitvector_new(ErlNifEnv* env, int argc, const ERL_NIF_TE
         return mk_error(env, "bad_size");
     }
 
-    ErlNifResourceType *bit_data_resource;
-    ErlNifResourceType *bit_vector_state_resource;
-
-    // Figure out how many uint64 words we need to store this vector
-    uint64_t word_count = (size / 64) + (size % 64 > 0 ? 1 : 0);
-
     // Alloc the bit vector
     struct PrivData *priv_data = enif_priv_data(env);
-    uint64_t *bit_data = enif_alloc_resource(
-        priv_data->bit_data_resource,
-        word_count * 8
-    );
-
-    // Initialize to zero
-    memset(bit_data, 0, word_count * 8);
+    uint64_t *bit_data = allocate_bit_vector(priv_data, size);
 
     // Wrap struct
     struct bit_vector* state = enif_alloc_resource(
@@ -86,14 +107,7 @@ static ERL_NIF_TERM erl_bitvector_set(ErlNifEnv* env, int argc, const ERL_NIF_TE
     }
 
     // Set/clear the bit
-    const uint64_t word_offset = bit_index / 64;
-    const uint8_t word_index = bit_index % 64;
-    uint64_t test_bit = ((uint64_t) 1) << word_index;
-    if (bit) {
-        vector->bit_data[word_offset] |= test_bit;
-    } else {
-        vector->bit_data[word_offset] &= ~test_bit;
-    }
+    set_bit(vector->bit_data, bit_index, bit);
 
     return mk_atom(env, "ok");
 }
@@ -124,11 +138,11 @@ static ERL_NIF_TERM erl_bitvector_get(ErlNifEnv* env, int argc, const ERL_NIF_TE
     }
 
     // Get the bit value
-    const uint64_t word_offset = bit_index / 64;
-    const uint8_t word_index = bit_index % 64;
-    uint8_t value = vector->bit_data[word_offset] & (1 << word_index) ? 1 : 0;
+    const uint64_t word_offset = bit_index / WORD_SIZE_BITS;
+    const uint8_t word_index = bit_index % WORD_SIZE_BITS;
+    const uint8_t value = vector->bit_data[word_offset] & (1 << word_index) ? 1 : 0;
 
-    ERL_NIF_TERM ret = enif_make_uint64(env, value);
+    ERL_NIF_TERM ret = enif_make_uint(env, value);
     return enif_make_tuple2(env, mk_atom(env, "ok"), ret);
 }
 
@@ -144,21 +158,9 @@ static ERL_NIF_TERM erl_ringbuffer_new(ErlNifEnv* env, int argc, const ERL_NIF_T
         return mk_error(env, "bad_size");
     }
 
-    ErlNifResourceType *bit_data_resource;
-    ErlNifResourceType *bit_vector_state_resource;
-
-    // Figure out how many uint64 words we need to store this vector
-    uint64_t word_count = (size / 64) + (size % 64 > 0 ? 1 : 0);
-
     // Alloc the bit vector
     struct PrivData *priv_data = enif_priv_data(env);
-    uint64_t *bit_data = enif_alloc_resource(
-        priv_data->bit_data_resource,
-        word_count * 8
-    );
-
-    // Initialize to zero
-    memset(bit_data, 0, word_count * 8);
+    uint64_t *bit_data = allocate_bit_vector(priv_data, size);
 
     // Wrap struct
     struct bit_ringbuffer* state = enif_alloc_resource(
@@ -198,22 +200,22 @@ static ERL_NIF_TERM erl_ringbuffer_append(ErlNifEnv* env, int argc, const ERL_NI
     }
 
     // Set/clear the bit
-    uint64_t test_bit = ((uint64_t) 1) << buffer->word_index;
-    if (bit) {
-        buffer->bit_data[buffer->word_offset] |= test_bit;
-    } else {
-        buffer->bit_data[buffer->word_offset] &= ~test_bit;
-    }
+    set_bit_offset_index(
+        buffer->bit_data,
+        buffer->word_offset,
+        buffer->word_index,
+        bit
+    );
 
     // Increment the index on the buffer
     buffer->word_index++;
-    if (buffer->word_index > 63) {
+    if (buffer->word_index >= WORD_SIZE_BITS) {
         buffer->word_index = 0;
         buffer->word_offset++;
     }
 
     // Wrap it if we ended up past the end of the buffer
-    if (buffer->word_offset * 64 + buffer->word_index >= buffer->vector_size) {
+    if (buffer->word_offset * WORD_SIZE_BITS + buffer->word_index >= buffer->vector_size) {
         buffer->word_offset = 0;
         buffer->word_index = 0;
     }
@@ -238,14 +240,14 @@ static ERL_NIF_TERM erl_ringbuffer_popcnt(ErlNifEnv* env, int argc, const ERL_NI
     }
 
     // Popcnt the data
-    uint64_t popcnt = popcnt_vector(buffer->bit_data, buffer->vector_size);
+    const uint64_t popcnt = popcnt_vector(buffer->bit_data, buffer->vector_size);
 
     // Return
     return enif_make_tuple2(env, mk_atom(env, "ok"), enif_make_uint64(env, popcnt));
 }
 
 static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits) {
-    uint64_t vector_size_words = (vector_size_bits / 64) + (vector_size_bits % 64 == 0 ? 0 : 1);
+    const uint64_t vector_size_words = words_for_bits(vector_size_bits);
     uint64_t popcnt = 0;
     for (uint64_t i = 0; i < vector_size_words; i++) {
         popcnt += __builtin_popcountll(vector[i]);
@@ -253,12 +255,12 @@ static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits) {
     return popcnt;
 }
 
-void destructor_bit_vector(ErlNifEnv* env, void* obj) {
+void destructor_bit_vector(UNUSED ErlNifEnv* env, void* obj) {
     struct bit_vector *vector = obj;
     enif_release_resource(vector->bit_data);
 }
 
-void destructor_bit_ringbuffer(ErlNifEnv* env, void* obj) {
+void destructor_bit_ringbuffer(UNUSED ErlNifEnv* env, void* obj) {
     struct bit_ringbuffer *buffer = obj;
     enif_release_resource(buffer->bit_data);
 }

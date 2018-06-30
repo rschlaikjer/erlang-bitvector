@@ -11,6 +11,10 @@
 // For hushing compiler warnings
 #define UNUSED __attribute__((unused))
 
+// Using 64-bit words to store data
+#define WORD_SIZE_BITS 64
+#define WORD_SIZE_BYTES (WORD_SIZE_BITS / 8)
+
 struct PrivData {
     // Resource type for allocated bit vector data
     ErlNifResourceType *bit_data_resource;
@@ -61,6 +65,10 @@ static ERL_NIF_TERM erl_ringbuffer_popcnt(
 );
 
 // Internal
+static inline uint64_t words_for_bits(uint64_t bit_count);
+static inline void set_bit(uint64_t* vector, const uint64_t bit_index, const unsigned int bit);
+static inline void set_bit_offset_index(uint64_t* vector, const uint64_t word_offset, const uint8_t word_index, const unsigned int bit);
+static uint64_t* allocate_bit_vector(const struct PrivData *priv_data, uint64_t size_bits);
 static uint64_t popcnt_vector(uint64_t* vector, uint64_t vector_size_bits);
 
 // Data destructors
