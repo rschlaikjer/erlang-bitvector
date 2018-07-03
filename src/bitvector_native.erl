@@ -3,6 +3,7 @@
     vector_new/1,
     vector_get/2,
     vector_set/3,
+    vector_popcnt/1,
     ringbuffer_new/1,
     ringbuffer_append/2,
     ringbuffer_popcnt/1
@@ -18,6 +19,9 @@ vector_get(_, _) ->
     erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
 
 vector_set(_, _, _) ->
+    erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
+
+vector_popcnt(_) ->
     erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, ?LINE}]}).
 
 ringbuffer_new(_) ->

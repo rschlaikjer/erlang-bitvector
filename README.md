@@ -6,7 +6,7 @@ Native C implementation of bit vectors, and bit ringbuffers.
 Add as a dependency:
 
 ```erlang
-{bitvector, "0.4.0", {git, "https://github.com/rschlaikjer/erlang-bitvector.git", {tag, "0.4.0"}}}
+{bitvector, "0.5.0", {git, "https://github.com/rschlaikjer/erlang-bitvector.git", {tag, "0.5.0"}}}
 ```
 
 Bit vectors simply store packed bit values:
@@ -73,6 +73,15 @@ Returns `ok` on success, or an error if the index or value are invalid.
 Retrieve the bit at position **Index** in vector **Vector**. The value for
 **Bit** will be either `0` or `1` on success.
 An error tuple is returned if **Index** is not valid.
+
+#### popcnt(Vector) -> {ok, Count} | {error, Reason}
+
+ - **Vector = bit_vector:bit_vector()**
+ - **Count = non_neg_iteger()**
+ - **Reason = atom()**
+
+Get the **Count** of set bits in the vector **Vector**.
+An error tuple is returned if **Vector** is not a valid vector.
 
 ### bit_ringbuffer
 

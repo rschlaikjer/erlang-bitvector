@@ -2,7 +2,8 @@
 -export([
     new/1,
     set/3,
-    get/2
+    get/2,
+    popcnt/1
 ]).
 -export_type([bit_vector/0]).
 
@@ -23,6 +24,10 @@ set(Vector, Idx, Val) when is_integer(Idx) andalso is_integer(Val) andalso Val >
 -spec get(bit_vector(), non_neg_integer()) -> {ok, non_neg_integer()} | {error, atom()}.
 get(Buffer, Idx) when is_integer(Idx) ->
     bitvector_native:vector_get(Buffer, Idx).
+
+-spec popcnt(bit_vector()) -> {ok, non_neg_integer()} | {error, atom()}.
+popcnt(Buffer) ->
+    bitvector_native:vector_popcnt(Buffer).
 
 -ifdef(TEST).
 
@@ -91,5 +96,13 @@ non_integer_index_get_test() ->
     ?assertError(function_clause, get(Vec, 1.1)),
     ?assertError(function_clause, get(Vec, true)),
     ?assertError(function_clause, get(Vec, <<>>)).
+
+popcnt_test() ->
+    {ok, Vec} = new(100),
+    {ok, 0} = popcnt(Vec),
+    ok = set(Vec, 0, 1),
+    {ok, 1} = popcnt(Vec),
+    ok = set(Vec, 80, 1),
+    {ok, 2} = popcnt(Vec).
 
 -endif.

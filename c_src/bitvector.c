@@ -157,6 +157,34 @@ static ERL_NIF_TERM erl_bitvector_get(ErlNifEnv* env, int argc,
     return enif_make_tuple2(env, mk_atom(env, "ok"), ret);
 }
 
+static ERL_NIF_TERM erl_bitvector_popcnt(ErlNifEnv* env, int argc,
+                                         const ERL_NIF_TERM argv[]) {
+    // Only need the vector as arg
+    if (argc != 1) {
+        return enif_make_badarg(env);
+    }
+
+    // Grab the vector
+    struct PrivData *priv_data = enif_priv_data(env);
+    struct bit_vector *vector;
+    if (!enif_get_resource(env, argv[0],
+                           priv_data->bit_vector_state_resource,
+                           ((void*) (&vector)))) {
+        return mk_error(env, "bad_vector");
+    }
+
+    // Popcnt the data
+    const uint64_t popcnt = popcnt_vector(
+        vector->bit_data, vector->vector_size
+    );
+
+    // Return {ok, PopCnt}
+    return enif_make_tuple2(
+        env,
+        mk_atom(env, "ok"),
+        enif_make_uint64(env, popcnt)
+    );
+}
 static ERL_NIF_TERM erl_ringbuffer_new(ErlNifEnv* env, int argc,
                                        const ERL_NIF_TERM argv[]) {
     // Assert we got one arg

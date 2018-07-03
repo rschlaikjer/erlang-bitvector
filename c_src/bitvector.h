@@ -52,6 +52,9 @@ static ERL_NIF_TERM erl_bitvector_set(
 static ERL_NIF_TERM erl_bitvector_get(
     ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
 );
+static ERL_NIF_TERM erl_bitvector_popcnt(
+    ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]
+);
 
 // Ringbuffers
 static ERL_NIF_TERM erl_ringbuffer_new(
@@ -96,6 +99,7 @@ static ErlNifFunc nif_funcs[] = {
     {"vector_new", 1, erl_bitvector_new, 0},
     {"vector_get", 2, erl_bitvector_get, 0},
     {"vector_set", 3, erl_bitvector_set, 0},
+    {"vector_popcnt", 1, erl_bitvector_popcnt, 0},
     {"ringbuffer_new", 1, erl_ringbuffer_new, 0},
     {"ringbuffer_append", 2, erl_ringbuffer_append, 0},
     {"ringbuffer_popcnt", 1, erl_ringbuffer_popcnt, 0}
